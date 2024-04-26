@@ -37,6 +37,40 @@ class ImageProcessor:
         plt.show()
 
 
+
+
+
+    def _create_convolution_2(self):
+
+        p_flat = self.P.flatten()
+        p_row_len = self.P.shape[1]  # Assuming p is a 3x3 matrix
+        self.aa = np.zeros(self.M**2 * self.N ** 2, dtype=float)
+        self.ii = np.zeros(self.N ** 2, dtype=int)
+        self.jj = np.zeros(self.M**2 * self.N ** 2, dtype=int)
+
+        ind = 0
+        shift = 0
+
+        for row in range(self.N ** 2):
+            lateral_shift_counter = 0  # Reset lateral shift counter for each row
+            if (row + 1) % self.N == 0 and row != 0:
+                shift += self.N_tild - self.N
+
+            for i, element in enumerate(p_flat):
+                self.ii[row] = ind
+                diag_col = row + shift
+                if i % p_row_len == 0 and i != 0:
+                    lateral_shift_counter += 1
+                self.aa[ind] = element
+                self.jj[ind] = diag_col + i%p_row_len + lateral_shift_counter*self.N_tild
+                ind += 1
+
+        self.jj = np.minimum(self.jj, self.N_tild ** 2 - 1)
+        self.ii = np.append(self.ii, len(self.aa))
+
+
+
+
     def _create_convolution(self):
 
         """"
@@ -101,13 +135,13 @@ class ImageProcessor:
         """Create convolution matrix and multiply with flattened image
          OUTPUT: blur
            """
-        self._create_convolution()
+        self._create_convolution_2()
         X_flattened = self.padded_image.flatten('F')
         b = np.zeros(self.N ** 2, dtype=float)
 
         for i in range(self.N ** 2):
             start = self.ii[i]
-            end = self.ii[i + 1] if i < self.N ** 2 - 1 else len(aa)
+            end = self.ii[i + 1] if i < self.N ** 2 - 1 else len(self.aa)
             indices = self.jj[start:end]
             valid_indices = indices[indices < len(X_flattened)]
             b[i] = np.sum(self.aa[start:start + len(valid_indices)] * X_flattened[valid_indices])
