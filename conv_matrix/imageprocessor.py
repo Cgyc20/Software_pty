@@ -41,7 +41,11 @@ class ImageProcessor:
 
 
     def _create_convolution_2(self):
+        """
+        This is the main loop. THis will output the Topelitz. This depends on the image size and the probe size
 
+        OUTPUT: Filled in Toeplitz matrix A
+        """
         p_flat = self.P.flatten()
         p_row_len = self.P.shape[1]  # Assuming p is a 3x3 matrix
         self.aa = np.zeros(self.M**2 * self.N ** 2, dtype=float)
