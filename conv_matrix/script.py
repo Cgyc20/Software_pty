@@ -22,7 +22,8 @@ Z = gaussian(7,sigma=10)
 S_l = np.array([0,-1,0,-1,4,-1,0,-1,0])
 S = S_l.reshape((3,3))
 print(S)
-Model = ImageProcessor(image_path,S)
+Model = ImageProcessor(S)
+Model.input_image(image_path=image_path)
 
 orig_image = Model.image
 
@@ -30,6 +31,9 @@ blur_image = Model.create_blur()
 #Model.display_image(blur_image)
 
 #Plot original and converted with colour bar
+
+Model.plot_sparse()
+
 
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 ax[0].imshow(orig_image, cmap='gray')
