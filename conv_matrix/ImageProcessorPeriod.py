@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import cv2
 import scipy.sparse
 
-class ImageProcessor:
+class ImageProcessorPeriod:
     def __init__(self,P):
         """Input a probe which is square"""
         self.P = P 
@@ -18,16 +18,12 @@ class ImageProcessor:
         self.X = plt.imread(image_path)
         self.Xg = cv2.cvtColor(self.X, cv2.COLOR_BGR2GRAY)
         self.image = self.make_square(self.Xg)
-        self.padded_image = np.pad(self.image, (self.P.shape[0]//2, self.P.shape[0]//2), 'constant', constant_values=(0, 0))
 
         self.N = self.image.shape[0]
-        self.N_tild = self.padded_image.shape[0]
 
     def input_matrix(self,X):
         self.image = self.make_square(X)
-        self.padded_image = np.pad(self.image, (self.P.shape[0]//2, self.P.shape[0]//2), 'constant', constant_values=(0, 0))
         self.N = self.image.shape[0]
-        self.N_tild = self.padded_image.shape[0]
 
     def make_square(self, image):
         """
@@ -64,94 +60,30 @@ class ImageProcessor:
         shift = 0
 
         for row in range(self.N ** 2):
-            lateral_shift_counter = 0  # Reset lateral shift counter for each row
             self.ii[row] = ind
 
-            #if (row + 1 ) % self.N == 0 and row != 0: THIS WAS BUG ALSO
-            if (row ) % self.N == 0 and row != 0: 
-                shift += self.N_tild - self.N
+            # #if (row + 1 ) % self.N == 0 and row != 0: THIS WAS BUG ALSO
+            # if (row ) % self.N == 0 and row != 0: 
+            #     shift += self.N
             
 
             for i, element in enumerate(p_flat):
                 #self.ii[row] = ind THIS WAS THE BUG 
                 diag_col = row + shift
-                if i % p_row_len == 0 and i != 0:
-                    lateral_shift_counter += 1
                 self.aa[ind] = element
-                self.jj[ind] = diag_col + i%p_row_len + (lateral_shift_counter)*self.N_tild
+                self.jj[ind] = diag_col + i%p_row_len 
                 ind += 1
 
-        self.jj = np.minimum(self.jj, self.N_tild ** 2 - 1)
+        self.jj = np.minimum(self.jj, self.N ** 2 - 1)
         self.ii = np.append(self.ii, len(self.aa))
 
-
-
-
-    def _create_convolution(self):
-
-        """"
-        Creates the convolution matrix
-        """
-        p_flat = self.P.flatten()
-        self.aa = np.zeros(self.M**2 * self.N ** 2, dtype=float) #Number of elements M**2 elements per row
-        self.ii = np.zeros(self.N ** 2, dtype=int)
-        self.jj = np.zeros(self.M**2 * self.N ** 2, dtype=int)
-
-        ind = 0
-        shift = 0
-        for row in range(self.N ** 2):
-            self.ii[row] = ind
-            diag_col = row + shift
-            lateral_shift = self.N_tild
-            self.aa[ind] = p_flat[0]
-            self.jj[ind] = diag_col
-            ind += 1
-
-            self.aa[ind] = p_flat[1]
-            self.jj[ind] = diag_col + 1
-            ind += 1
-
-            self.aa[ind] = p_flat[2]
-            self.jj[ind] = diag_col + 2
-            ind += 1
-
-            self.aa[ind] = p_flat[3]
-            self.jj[ind] = diag_col + lateral_shift
-            ind += 1
-
-            self.aa[ind] = p_flat[4]
-            self.jj[ind] = diag_col + lateral_shift + 1
-            ind += 1
-
-            self.aa[ind] = p_flat[5]
-            self.jj[ind] = diag_col + lateral_shift + 2
-            ind += 1
-
-            self.aa[ind] = p_flat[6]
-            self.jj[ind] = diag_col + 2 * lateral_shift
-            ind += 1
-
-            self.aa[ind] = p_flat[7]
-            self.jj[ind] = diag_col + 2 * lateral_shift + 1
-            ind += 1
-
-            self.aa[ind] = p_flat[8]
-            self.jj[ind] = diag_col + 2 * lateral_shift + 2
-            ind += 1
-
-            if (row + 1) % self.N == 0 and row != 0:
-                shift += self.N_tild - self.N
-
-        self.jj = np.minimum(self.jj, self.N_tild ** 2 - 1)
-
-        self.ii = np.append(self.ii, len(self.aa))
 
     def plot_sparse(self):
         """Plot the sparse matrix"""
         self.create_convolution_2()
         #self.jj = np.minimum(self.jj, self.N_tild**2 - 1)  # Ensure all column indices are within bounds
         self.ii[0] = 0  # Ensure the first element of ii is zero
-        matrixA = scipy.sparse.csr_matrix((self.aa, self.jj, self.ii), shape=(self.N**2,self.N_tild**2))
+        matrixA = scipy.sparse.csr_matrix((self.aa, self.jj, self.ii), shape=(self.N**2,self.N**2))
         fig, ax = plt.subplots(figsize=(8, 8))  # Adjust the figure size here
         ax.spy(matrixA)
         plt.show()
@@ -164,7 +96,7 @@ class ImageProcessor:
          OUTPUT: blur 
            """
         self.create_convolution_2()
-        X_flattened = self.padded_image.flatten('F')
+        X_flattened = self.image.flatten('F')
         b = np.zeros(self.N ** 2, dtype=float)
 
         for i in range(self.N ** 2):
