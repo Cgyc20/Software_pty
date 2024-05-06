@@ -9,3 +9,6 @@ You can define the skip value, image_path, number of iterations for the image re
 
 The 'Conv_matrix' folder contains the software to place the probe using a large Topelitz matrix which will define where the probe will be placed. The 'Script.py' can be run here, within this folder the user can choose to use a gaussian matrix of size m
 In which m is odd. Note that the user can also sharpen the image using a 3X3 sharpening topelitz matrix. 
+
+
+You will need CV2, Matplotlib, PyTorch downloaded. 
